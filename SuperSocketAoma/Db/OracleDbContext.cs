@@ -1,4 +1,5 @@
 ﻿using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration.Conventions;
 
 namespace SuperSocketAoma.Db
 {
@@ -29,6 +30,8 @@ namespace SuperSocketAoma.Db
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("C##BUS_DATASYS");
+            //解决EF动态建库数据库表名变为复数问题  
+            modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();  
         }
     }
 }
