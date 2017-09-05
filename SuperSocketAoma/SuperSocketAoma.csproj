@@ -118,6 +118,7 @@
     <Compile Include="Common\MongoWriter.cs" />
     <Compile Include="Db\AnalysisAlertData.cs" />
     <Compile Include="Db\OracleDbContext.cs" />
+    <Compile Include="Db\OracleWriter.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -166,6 +167,7 @@
     </Compile>
     <None Include="supersocket.cmd" />
     <None Include="supersocket.sh" />
+    <None Include="平台通讯协议.17-08-21-奥玛-驾驶行为.docx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

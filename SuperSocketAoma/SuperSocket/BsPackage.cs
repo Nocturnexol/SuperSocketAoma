@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using SuperSocket.Common;
 using SuperSocketAoma.Common;
+using SuperSocketAoma.Db;
 using SuperSocketAoma.Model;
 //using log4net;
 using ThreadState = System.Threading.ThreadState;
@@ -77,14 +78,13 @@ namespace SuperSocketAoma.SuperSocket
                             {
                                 foreach (var data in list)
                                 {
-                                    //MainForm.MongoWriter.Enqueue(new GPSData
-                                    //{
-                                    //    CommandCode = Convert.ToString(data.CommandCode, 16),
-                                    //    VehicleNum = data.VehicleNum,
-                                    //    Message = data.SourceHexStr,
-                                    //    DateTime = data.GetDateTimeStr(),
-                                    //    SaveTime = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")
-                                    //});
+                                    MainForm.OracleWriter.Enqueue(new AnalysisAlertData
+                                    {
+                                        MessageId = data.MessageId,
+                                        Content = data.SourceHexStr,
+                                        DateTime = DateTime.Parse(data.GetDateTimeStr()),
+                                        SaveTime = DateTime.Now
+                                    });
 
                                 }
                             }
@@ -141,6 +141,8 @@ namespace SuperSocketAoma.SuperSocket
                     var pack = p.Unescape().ToArray();
 
                     var aomaData = new AnalysisAlert();
+                    aomaData.SourceHexStr = p.ByteArrToHexStr();
+
                     aomaData.MessageId = Convert.ToUInt16(pack.CloneRange(0, 2).ByteArrToHexStr(), 16);
                     var properties = Convert.ToInt16(pack.CloneRange(2, 2).ByteArrToHexStr(), 16);
                     var propertiesStr = Convert.ToString(properties, 2).PadLeft('0');

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketEngine;
+using SuperSocketAoma.Db;
 using SuperSocketAoma.SuperSocket;
 using CloseReason = System.Windows.Forms.CloseReason;
 
@@ -11,10 +12,12 @@ namespace SuperSocketAoma
     public partial class MainForm : Form
     {
         private bool _startupFlag;
+        public static OracleWriter OracleWriter;
         //private readonly ILog _logger=LogManager.GetLogger(typeof(MainForm));
         public MainForm()
         {
             InitializeComponent();
+            OracleWriter = new OracleWriter();
         }
 
         private void Main_Load(object sender, EventArgs e)
@@ -80,6 +83,7 @@ namespace SuperSocketAoma
                 info.Text = @"服务已启动";
 
                 BsPackage.StartConsuming();
+                OracleWriter.Start();
             }
             else
             {
@@ -88,6 +92,7 @@ namespace SuperSocketAoma
                 info.Text = @"服务已停止";
                 Common.Extensions.AddLog("服务已停止");
                 BsPackage.StopConsuming();
+                OracleWriter.Stop();
             }
 
             _startupFlag = !_startupFlag;

@@ -20,6 +20,7 @@ namespace SuperSocketAoma.Model
 
         [DisplayName("文件名")]
         public string FileName { get; set; }
+        public string SourceHexStr { get; set; }
         public string GetDateTimeStr()
         {
             var dateTime = new DateTime(int.Parse("20" + DateTime[0]), DateTime[1], DateTime[2], DateTime[3], DateTime[4], DateTime[5]);

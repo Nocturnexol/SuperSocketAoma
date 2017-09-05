@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SuperSocketAoma.Db
 {
     public class AnalysisAlertData
     {
-
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid Id { get; set; }
+        public int MessageId { get; set; }
+        public string Content { get; set; }
+        public DateTime DateTime { get; set; }
+        public DateTime SaveTime { get; set; }
     }
 }
