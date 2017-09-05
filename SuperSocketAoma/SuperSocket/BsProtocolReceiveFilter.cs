@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using SuperSocket.Common;
 using SuperSocket.SocketBase;
@@ -15,6 +16,7 @@ namespace SuperSocketAoma.SuperSocket
     {
         private readonly BsProtocolSession _appSession;
         private readonly object _lockObj = new object();
+        private static readonly byte Mark = Convert.ToByte(ConfigurationManager.AppSettings["Mark"], 16);
         //private readonly ILog _logger;
         public BsProtocolReceiveFilter(IAppSession appSession)
         {
@@ -43,16 +45,20 @@ namespace SuperSocketAoma.SuperSocket
                 //Common.Extensions.AddLog($"发送报文：{str}");
                  //LogManager.Info($"发送报文：{str}");
                 source.SeparatePacket(_appSession);
-                if (_appSession.FragBytes.Any() && _appSession.FragBytes.Count % 76 == 0)
+                if (_appSession.FragBytes.Any())
                 {
                     var fragArr = _appSession.FragBytes.ToArray();
-                    for (var i = 0; i < fragArr.Length / 76; i++)
+                    //for (var i = 0; i < fragArr.Length / 76; i++)
+                    //{
+                    //    BsPackage.PacketQueue.Enqueue(fragArr.CloneRange(76 * i, 76).ToList());
+                    //}
+                    var packet = BsPackage.SeparateSinglePacket(source);
+                    if (packet.LastOrDefault() == Mark)
                     {
-                        //BsPackage.PacketQueue.Enqueue(
-                        //    _appSession.FragBytes.Where((t, k) => k >= i * 76 && k < (i + 1) * 76).ToList());
-                        BsPackage.PacketQueue.Enqueue(fragArr.CloneRange(76 * i, 76).ToList());
+                        BsPackage.PacketQueue.Enqueue(packet);
+                        _appSession.FragBytes = fragArr.Skip(packet.Count).ToList();
                     }
-                    _appSession.FragBytes.Clear();
+                    //_appSession.FragBytes.Clear();
                 }
 
             }

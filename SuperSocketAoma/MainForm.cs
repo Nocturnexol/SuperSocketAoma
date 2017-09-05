@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketEngine;
 using SuperSocketAoma.Db;
+using SuperSocketAoma.Model;
 using SuperSocketAoma.SuperSocket;
 using CloseReason = System.Windows.Forms.CloseReason;
 
@@ -22,6 +23,7 @@ namespace SuperSocketAoma
 
         private void Main_Load(object sender, EventArgs e)
         {
+            tbData.Text = new AnalysisAlert().GetExample().Parse();
         }
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -82,8 +84,8 @@ namespace SuperSocketAoma
                 Common.Extensions.AddLog("服务已启动");
                 info.Text = @"服务已启动";
 
-                BsPackage.StartConsuming();
                 OracleWriter.Start();
+                BsPackage.StartConsuming();
             }
             else
             {

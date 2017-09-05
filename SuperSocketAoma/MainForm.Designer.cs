@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.MaximizeBox = false;//使最大化窗口失效
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -43,10 +41,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.log = new System.Windows.Forms.RichTextBox();
             this.clear = new System.Windows.Forms.LinkLabel();
-            this.VehicleGridView = new System.Windows.Forms.DataGridView();
             this.label2 = new System.Windows.Forms.Label();
+            this.tbData = new System.Windows.Forms.TextBox();
             this.contextMenuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.VehicleGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -146,18 +143,6 @@
             this.clear.Text = "清空日志";
             this.clear.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.clear_LinkClicked);
             // 
-            // VehicleGridView
-            // 
-            this.VehicleGridView.AllowUserToAddRows = false;
-            this.VehicleGridView.AllowUserToDeleteRows = false;
-            this.VehicleGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.VehicleGridView.Location = new System.Drawing.Point(12, 24);
-            this.VehicleGridView.Name = "VehicleGridView";
-            this.VehicleGridView.ReadOnly = true;
-            this.VehicleGridView.RowTemplate.Height = 23;
-            this.VehicleGridView.Size = new System.Drawing.Size(320, 258);
-            this.VehicleGridView.TabIndex = 7;
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -165,7 +150,15 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 12);
             this.label2.TabIndex = 8;
-            this.label2.Text = "车辆列表";
+            this.label2.Text = "测试数据";
+            // 
+            // tbData
+            // 
+            this.tbData.Location = new System.Drawing.Point(12, 24);
+            this.tbData.Multiline = true;
+            this.tbData.Name = "tbData";
+            this.tbData.Size = new System.Drawing.Size(328, 258);
+            this.tbData.TabIndex = 9;
             // 
             // MainForm
             // 
@@ -173,21 +166,22 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(685, 343);
             this.ContextMenuStrip = this.contextMenuStrip1;
+            this.Controls.Add(this.tbData);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.VehicleGridView);
             this.Controls.Add(this.clear);
             this.Controls.Add(this.log);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.info);
             this.Controls.Add(this.close);
             this.Controls.Add(this.startUp);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "问题车辆监控平台";
+            this.Text = "奥玛分析报警数据接收";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.Load += new System.EventHandler(this.Main_Load);
             this.contextMenuStrip1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.VehicleGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -207,8 +201,8 @@
         public System.Windows.Forms.RichTextBox LogBox { get { return log; } }
         private System.Windows.Forms.RichTextBox log;
         private System.Windows.Forms.LinkLabel clear;
-        private System.Windows.Forms.DataGridView VehicleGridView;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbData;
     }
 }
 

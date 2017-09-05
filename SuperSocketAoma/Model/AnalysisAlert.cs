@@ -28,7 +28,7 @@ namespace SuperSocketAoma.Model
         }
         public AnalysisAlert GetExample()
         {
-            MessageId = 233;
+            MessageId = 0x0110;
             //Properties = Convert.ToUInt16("0000000000001010", 2);
             IsMultiPacket = false;
             IsEncrypted = false;
