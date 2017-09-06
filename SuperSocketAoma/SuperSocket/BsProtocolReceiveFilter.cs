@@ -56,6 +56,8 @@ namespace SuperSocketAoma.SuperSocket
                     if (packet.LastOrDefault() == Mark)
                     {
                         BsPackage.PacketQueue.Enqueue(packet);
+                        if (BsPackage.PacketQueue.Count > BsPackage.BorderCount)
+                            BsPackage.AutoResetEvent.Set();
                         _appSession.FragBytes = fragArr.Skip(packet.Count).ToList();
                     }
                     //_appSession.FragBytes.Clear();

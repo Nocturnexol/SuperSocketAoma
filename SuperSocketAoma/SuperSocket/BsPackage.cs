@@ -21,6 +21,8 @@ namespace SuperSocketAoma.SuperSocket
         public static readonly ConcurrentQueue<List<byte>> PacketQueue = new ConcurrentQueue<List<byte>>();
         public static readonly ConcurrentQueue<Exception> ErrorQueue = new ConcurrentQueue<Exception>();
         private static bool _isRunning;
+        public static AutoResetEvent AutoResetEvent = new AutoResetEvent(false);
+        public static readonly int BorderCount = int.Parse(ConfigurationManager.AppSettings["BorderCount"]);
         //private static readonly ILog Logger = LogManager.GetLogger(typeof(BsPackage));
 
         public static void SeparatePacket(this IList<byte> source, BsProtocolSession session)
@@ -32,6 +34,8 @@ namespace SuperSocketAoma.SuperSocket
                 if (packet.LastOrDefault() == Mark)
                 {
                     PacketQueue.Enqueue(packet);
+                    if (PacketQueue.Count > BorderCount)
+                        AutoResetEvent.Set();
                     SeparatePacket(source.Skip(packet.Count).ToList(), session);
                 }
                 else
@@ -52,6 +56,7 @@ namespace SuperSocketAoma.SuperSocket
             {
                 for (; _isRunning;)
                 {
+                    AutoResetEvent.WaitOne(5000);
                     List<byte> packet;
                     while (PacketQueue.Count > 0 && PacketQueue.TryDequeue(out packet))
                     {
