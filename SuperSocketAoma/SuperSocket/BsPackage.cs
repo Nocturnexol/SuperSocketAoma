@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,8 +17,7 @@ namespace SuperSocketAoma.SuperSocket
     public static class BsPackage
     {
         private static readonly byte Mark = Convert.ToByte(ConfigurationManager.AppSettings["Mark"], 16);
-        //private static readonly byte MarkByte = Convert.ToByte(Mark, 16);
-        //public static readonly List<byte> SourceList = new List<byte>();
+        private static readonly Encoding Encoding = Encoding.GetEncoding("GBK");
         public static readonly ConcurrentQueue<List<byte>> PacketQueue = new ConcurrentQueue<List<byte>>();
         private static bool _isRunning;
         //private static readonly ILog Logger = LogManager.GetLogger(typeof(BsPackage));
@@ -54,25 +52,26 @@ namespace SuperSocketAoma.SuperSocket
                 for (; _isRunning;)
                 {
                     List<byte> packet;
-                    var qCount = PacketQueue.Count;
-                    if (qCount > 0 && PacketQueue.TryDequeue(out packet))
+                    while (PacketQueue.Count > 0 && PacketQueue.TryDequeue(out packet))
                     {
                         try
                         {
-                            var list = packet.Construct();
-                            if (list != null && list.Any())
+                            var data = packet.Construct();
+                            if (data != null)
                             {
-                                foreach (var data in list)
+                                MainForm.OracleWriter.Enqueue(new AnalysisAlertData
                                 {
-                                    MainForm.OracleWriter.Enqueue(new AnalysisAlertData
-                                    {
-                                        MessageId = data.MessageId,
-                                        Content = data.SourceHexStr,
-                                        DateTime = DateTime.Parse(data.GetDateTimeStr()),
-                                        SaveTime = DateTime.Now
-                                    });
-
-                                }
+                                    Guid = Guid.NewGuid(),
+                                    TerminalId = data.TerminalId.ByteArrToHexStr(),
+                                    MessageId = data.MessageId,
+                                    Content = data.SourceHexStr,
+                                    DateTime = DateTime.Parse(data.GetDateTimeStr()),
+                                    EventType = data.EventType,
+                                    Manufacturer = data.Manufacturer,
+                                    FileNameLength = data.FileNameLength,
+                                    FileName = data.FileName,
+                                    //SaveTime = DateTime.Now
+                                });
                             }
                         }
                         catch (Exception e)
@@ -80,23 +79,25 @@ namespace SuperSocketAoma.SuperSocket
                             LogManager.Error(packet.ByteArrToHexStr(), e);
                         }
                     }
-                    else
+                    if (PacketQueue.Count < 10)
                     {
                         Thread.Sleep(20);
                     }
-                    
+
                 }
                 Thread.CurrentThread.Abort();
             });
             if (t.ThreadState != ThreadState.Running) t.Start();
         }
+
         public static void StopConsuming()
         {
             _isRunning = false;
         }
-        public static List<AnalysisAlert> Construct(this IList<byte> source)
+
+        public static AnalysisAlert Construct(this IList<byte> source)
         {
-            var res = new List<AnalysisAlert>();
+            var aomaData = new AnalysisAlert();
             try
             {
                 //if (string.IsNullOrWhiteSpace(Mark))
@@ -108,7 +109,7 @@ namespace SuperSocketAoma.SuperSocket
                 //}
                 //var packetList = new List<byte[]>();
                 //分包
-                if (source[0]!=Mark)
+                if (source[0] != Mark)
                 {
                     var ex = new Exception("数据包格式错误！");
                     //Logger.Error("数据包格式错误！", ex);
@@ -123,50 +124,49 @@ namespace SuperSocketAoma.SuperSocket
 
                 //foreach (var p in packetList)
                 //{
-                    //反转义
-                    var pack = source.Unescape().ToArray();
+                //反转义
+                var pack = source.Unescape().ToArray();
 
-                    var aomaData = new AnalysisAlert();
-                    aomaData.SourceHexStr = source.ByteArrToHexStr();
+                aomaData.SourceHexStr = source.ByteArrToHexStr();
 
-                    aomaData.MessageId = Convert.ToUInt16(pack.CloneRange(1, 2).ByteArrToHexStr(), 16);
+                aomaData.MessageId = Convert.ToUInt16(pack.CloneRange(1, 2).ByteArrToHexStr(), 16);
                 //aomaData.MessageId=BitConverter.ToUInt16(pack.CloneRange(0, 2),0);
-                    var properties = Convert.ToInt16(pack.CloneRange(3, 2).ByteArrToHexStr(), 16);
-                    var propertiesStr = Convert.ToString(properties, 2).PadLeft(16,'0');
-                    aomaData.IsMultiPacket = (properties & (int) Math.Pow(2, 13)) == properties;
-                    aomaData.IsEncrypted = (properties & (int)Math.Pow(2, 10)) == properties;
-                    aomaData.MessageLength = Convert.ToUInt16(propertiesStr.Substring(6), 2);
-                    aomaData.TerminalId = pack.CloneRange(6, 7);
-                    aomaData.SerialNum = Convert.ToUInt16(pack.CloneRange(13, 2).ByteArrToHexStr(), 16);
+                var properties = Convert.ToInt16(pack.CloneRange(3, 2).ByteArrToHexStr(), 16);
+                var propertiesStr = Convert.ToString(properties, 2).PadLeft(16, '0');
+                aomaData.IsMultiPacket = (properties & (int) Math.Pow(2, 13)) == properties;
+                aomaData.IsEncrypted = (properties & (int) Math.Pow(2, 10)) == properties;
+                aomaData.MessageLength = Convert.ToUInt16(propertiesStr.Substring(6), 2);
+                aomaData.TerminalId = pack.CloneRange(6, 7);
+                aomaData.SerialNum = Convert.ToUInt16(pack.CloneRange(13, 2).ByteArrToHexStr(), 16);
 
                 var startIndex = 15;
-                    if (aomaData.IsMultiPacket)
-                    {
-                        aomaData.TotalPack = Convert.ToUInt16(pack.CloneRange(15, 2).ByteArrToHexStr(), 16);
-                        aomaData.PackNum = Convert.ToUInt16(pack.CloneRange(17, 2).ByteArrToHexStr(), 16);
-                        startIndex = 19;
-                    }
+                if (aomaData.IsMultiPacket)
+                {
+                    aomaData.TotalPack = Convert.ToUInt16(pack.CloneRange(15, 2).ByteArrToHexStr(), 16);
+                    aomaData.PackNum = Convert.ToUInt16(pack.CloneRange(17, 2).ByteArrToHexStr(), 16);
+                    startIndex = 19;
+                }
 
-                    aomaData.DateTime = pack.CloneRange(startIndex, 6);
-                    aomaData.EventType = (EventType) pack[startIndex+6];
-                    aomaData.Manufacturer = (Manufacturer) pack[startIndex+7];
-                    aomaData.FileNameLength = pack[startIndex+8];
-                    aomaData.FileName = Encoding.Default.GetString(pack.CloneRange(startIndex+9, aomaData.FileNameLength));
-                    aomaData.CheckCode = pack[pack.Length - 2];
+                aomaData.DateTime = pack.CloneRange(startIndex, 6);
+                aomaData.EventType = (EventType) pack[startIndex + 6];
+                aomaData.Manufacturer = (Manufacturer) pack[startIndex + 7];
+                aomaData.FileNameLength = pack[startIndex + 8];
+                aomaData.FileName =
+                    Encoding.GetString(pack.CloneRange(startIndex + 9, pack.Length - 3 - (startIndex + 9) + 1));
+                aomaData.CheckCode = pack[pack.Length - 2];
 
-                    res.Add(aomaData);
                 //}
 
 
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message,e);
+                LogManager.Error(e.Message, e);
                 throw;
                 //return null;
             }
 
-            return res;
+            return aomaData;
         }
 
         public static List<byte> SeparateSinglePacket(IList<byte> source)
@@ -192,10 +192,11 @@ namespace SuperSocketAoma.SuperSocket
 
         public static string Parse(this AnalysisAlert src)
         {
-            var res=new List<byte>();
+            var res = new List<byte>();
             try
             {
                 #region 数据头
+
                 res.AddRange(src.MessageId.UshortToBytesBig());
                 var prop =
                     $"00{(src.IsMultiPacket ? 1 : 0)}00{(src.IsEncrypted ? 1 : 0)}{Convert.ToString(src.MessageLength, 2).PadLeft(9, '0')}";
@@ -208,21 +209,24 @@ namespace SuperSocketAoma.SuperSocket
                     res.AddRange(src.TotalPack.UshortToBytesBig());
                     res.AddRange(src.PackNum.UshortToBytesBig());
                 }
+
                 #endregion
 
                 #region 数据体
+
                 res.AddRange(src.DateTime);
                 res.Add((byte) src.EventType);
                 res.Add((byte) src.Manufacturer);
                 res.Add(src.FileNameLength);
-                res.AddRange(Encoding.Default.GetBytes(src.FileName));
+                res.AddRange(Encoding.GetBytes(src.FileName));
+
                 #endregion
 
                 //校验码
                 res.Add(res.Aggregate(res[0], (current, b) => (byte) (current ^ b)));
 
                 //转义 
-                res =res.Escape().ToList();
+                res = res.Escape().ToList();
 
                 //添加头尾标识
                 res.Insert(0, Mark);
@@ -231,10 +235,10 @@ namespace SuperSocketAoma.SuperSocket
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message,e);
+                LogManager.Error(e.Message, e);
                 throw;
             }
-            return  res.ToArray().ByteArrToHexStr();
+            return res.ToArray().ByteArrToHexStr();
         }
 
         /// <summary>
@@ -251,6 +255,7 @@ namespace SuperSocketAoma.SuperSocket
                     .Replace("7E", "7D02")
                     .HexStrToByteArr();
         }
+
         /// <summary>
         /// 反转义
         /// </summary>
