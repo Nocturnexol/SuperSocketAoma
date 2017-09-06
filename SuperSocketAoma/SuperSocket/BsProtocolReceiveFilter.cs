@@ -64,7 +64,8 @@ namespace SuperSocketAoma.SuperSocket
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message, e);
+                //LogManager.Error(e.Message, e);
+                BsPackage.ErrorQueue.Enqueue(e);
             }
 
             return new BsProtocolRequestInfo(list);

@@ -19,6 +19,7 @@ namespace SuperSocketAoma.SuperSocket
         private static readonly byte Mark = Convert.ToByte(ConfigurationManager.AppSettings["Mark"], 16);
         private static readonly Encoding Encoding = Encoding.GetEncoding("GBK");
         public static readonly ConcurrentQueue<List<byte>> PacketQueue = new ConcurrentQueue<List<byte>>();
+        public static readonly ConcurrentQueue<Exception> ErrorQueue = new ConcurrentQueue<Exception>();
         private static bool _isRunning;
         //private static readonly ILog Logger = LogManager.GetLogger(typeof(BsPackage));
 
@@ -76,7 +77,8 @@ namespace SuperSocketAoma.SuperSocket
                         }
                         catch (Exception e)
                         {
-                            LogManager.Error(packet.ByteArrToHexStr(), e);
+                            //LogManager.Error(packet.ByteArrToHexStr(), e);
+                            ErrorQueue.Enqueue(e);
                         }
                     }
                     if (PacketQueue.Count < 10)
@@ -113,7 +115,8 @@ namespace SuperSocketAoma.SuperSocket
                 {
                     var ex = new Exception("数据包格式错误！");
                     //Logger.Error("数据包格式错误！", ex);
-                    LogManager.Error("数据包格式错误！", ex);
+                    //LogManager.Error("数据包格式错误！", ex);
+                    ErrorQueue.Enqueue(ex);
                     throw ex;
                 }
                 //List<byte> packet;
@@ -161,7 +164,8 @@ namespace SuperSocketAoma.SuperSocket
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message, e);
+                //LogManager.Error(e.Message, e);
+                ErrorQueue.Enqueue(e);
                 throw;
                 //return null;
             }
@@ -235,7 +239,8 @@ namespace SuperSocketAoma.SuperSocket
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message, e);
+                //LogManager.Error(e.Message, e);
+                ErrorQueue.Enqueue(e);
                 throw;
             }
             return res.ToArray().ByteArrToHexStr();

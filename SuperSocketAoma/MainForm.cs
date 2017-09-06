@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Windows.Forms;
+using BS.DB.Comm;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketEngine;
 using SuperSocketAoma.Db;
 using SuperSocketAoma.Model;
 using SuperSocketAoma.SuperSocket;
 using CloseReason = System.Windows.Forms.CloseReason;
+using ThreadState = System.Threading.ThreadState;
 
 namespace SuperSocketAoma
 {
@@ -24,6 +27,32 @@ namespace SuperSocketAoma
         private void Main_Load(object sender, EventArgs e)
         {
             tbData.Text = new AnalysisAlert().GetExample().Parse();
+            var t = new Thread(() =>
+            {
+                while(true)
+                {
+                    try
+                    {
+                        Exception ex;
+                        while (BsPackage.ErrorQueue.Count > 0 && BsPackage.ErrorQueue.TryDequeue(out ex))
+                        {
+                            LogManager.Error(ex.Message, ex);
+                        }
+                        if (BsPackage.ErrorQueue.Count < 10)
+                        {
+                            Thread.Sleep(20);
+                        }
+                        LogManager.Info($"当前队列数量：{BsPackage.PacketQueue.Count}");
+                        Thread.Sleep(30 * 1000);
+                    }
+                    catch (Exception exception)
+                    {
+                        LogManager.Error(exception.Message, exception);
+                        Thread.CurrentThread.Abort();
+                    }
+                }
+            });
+            if (t.ThreadState != ThreadState.Running) t.Start();
         }
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {

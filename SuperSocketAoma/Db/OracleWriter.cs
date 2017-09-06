@@ -8,6 +8,7 @@ using System.Threading;
 using BS.DB;
 using Oracle.DataAccess.Client;
 using SuperSocketAoma.Common;
+using SuperSocketAoma.SuperSocket;
 
 namespace SuperSocketAoma.Db
 {
@@ -36,7 +37,8 @@ namespace SuperSocketAoma.Db
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message, e);
+                //LogManager.Error(e.Message, e);
+                BsPackage.ErrorQueue.Enqueue(e);
                 throw;
             }
         }
@@ -121,7 +123,8 @@ namespace SuperSocketAoma.Db
             }
             catch (Exception e)
             {
-                LogManager.Error(e.Message,e);
+                //LogManager.Error(e.Message,e);
+                BsPackage.ErrorQueue.Enqueue(e);
             }
         }
 
